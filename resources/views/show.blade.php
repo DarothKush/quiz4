@@ -24,7 +24,7 @@
                 src="/display/{{ $info->path }}"
                 alt="Block Error"
                 @else
-                src="https://long-quiz-exam.sgp1.digitaloceanspaces.com/{{ $info->path }}"
+                src="https://quiz4daroth.sgp1.digitaloceanspaces.com/{{ $info->path }}"
                 alt="Spaces Error"
                 @endif
                 >
