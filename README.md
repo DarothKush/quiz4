@@ -1,66 +1,103 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+#define DECK_SIZE 52
+#define HAND_SIZE 7
+#define NUM_HANDS 1000000
 
-## About Laravel
+typedef enum {
+    HEARTS,
+    DIAMONDS,
+    CLUBS,
+    SPADES
+} Suit;
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+typedef struct {
+    Suit suit;
+    short pips;
+} Card;
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+// Function prototypes
+void shuffleDeck(Card deck[]);
+void dealHand(Card deck[], Card hand[]);
+int evaluateHand(Card hand[]);
+void printProbabilities(int handCounts[]);
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+int main() {
+    Card deck[DECK_SIZE];
+    Card hand[HAND_SIZE];
+    int handCounts[6] = {0}; // 0: No Pair, 1: One Pair, 2: Two Pair, 3: Three of a Kind, 4: Full House, 5: Four of a Kind
+    
+    // Initialize the deck
+    for (int i = 0; i < DECK_SIZE; i++) {
+        deck[i].suit = i / 13;
+        deck[i].pips = i % 13 + 1;
+    }
+    
+    srand(time(NULL)); // Seed the random number generator
+    
+    // Monte Carlo simulation
+    for (int i = 0; i < NUM_HANDS; i++) {
+        shuffleDeck(deck);
+        dealHand(deck, hand);
+        int handType = evaluateHand(hand);
+        if (handType >= 0 && handType < 6) {
+            handCounts[handType]++;
+        }
+    }
+    
+    // Print probabilities
+    printProbabilities(handCounts);
+    
+    return 0;
+}
 
-## Learning Laravel
+void shuffleDeck(Card deck[]) {
+    for (int i = 0; i < DECK_SIZE; i++) {
+        int r = i + rand() / (RAND_MAX / (DECK_SIZE - i) + 1);
+        Card temp = deck[i];
+        deck[i] = deck[r];
+        deck[r] = temp;
+    }
+}
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+void dealHand(Card deck[], Card hand[]) {
+    for (int i = 0; i < HAND_SIZE; i++) {
+        hand[i] = deck[i];
+    }
+}
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+int evaluateHand(Card hand[]) {
+    int ranks[15] = {0}; // Counts of each rank
+    int pairs = 0, threes = 0, fours = 0;
+    
+    for (int i = 0; i < HAND_SIZE; i++) {
+        ranks[hand[i].pips]++;
+    }
+    
+    for (int i = 1; i < 15; i++) {
+        if (ranks[i] == 2) pairs++;
+        else if (ranks[i] == 3) threes++;
+        else if (ranks[i] == 4) fours++;
+    }
+    
+    if (fours == 1) return 5; // Four of a Kind
+    if (threes == 1 && pairs == 1) return 4; // Full House
+    if (threes == 1) return 3; // Three of a Kind
+    if (pairs == 2) return 2; // Two Pair
+    if (pairs == 1) return 1; // One Pair
+    return 0; // No Pair
+}
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains over 2000 video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
-
-## Laravel Sponsors
-
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
-
-### Premium Partners
-
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[WebReinvent](https://webreinvent.com/)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Jump24](https://jump24.co.uk)**
-- **[Redberry](https://redberry.international/laravel/)**
-- **[Active Logic](https://activelogic.com)**
-- **[byte5](https://byte5.de)**
-- **[OP.GG](https://op.gg)**
-
-## Contributing
-
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
-
-## Code of Conduct
-
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
-
-## Security Vulnerabilities
-
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
-
-## License
-
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+void printProbabilities(int handCounts[]) {
+    double totalHands = (double)NUM_HANDS;
+    
+    printf("Hand Probabilities:\n");
+    printf("No Pair: %.6f\n", handCounts[0] / totalHands);
+    printf("One Pair: %.6f\n", handCounts[1] / totalHands);
+    printf("Two Pair: %.6f\n", handCounts[2] / totalHands);
+    printf("Three of a Kind: %.6f\n", handCounts[3] / totalHands);
+    printf("Full House: %.6f\n", handCounts[4] / totalHands);
+    printf("Four of a Kind: %.6f\n", handCounts[5] / totalHands);
+}
